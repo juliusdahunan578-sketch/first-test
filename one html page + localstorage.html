@@ -6,7 +6,6 @@
   <title>Materials & Orders Manager</title>
   <style>
     :root {
-      
       --bg: #0f172a;
       --card: #1e293b;
       --accent: #38bdf8;
@@ -144,18 +143,6 @@
       text-align: center;
     }
 
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-    }
-
-    @media (max-width: 700px) {
-      .grid-2 {
-        grid-template-columns: 1fr;
-      }
-    }
-
     .status {
       display: inline-block;
       padding: 0.2rem 0.5rem;
@@ -286,6 +273,7 @@
               <th>Qty</th>
               <th>Unit Price</th>
               <th>Total Value</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -295,6 +283,9 @@
                 <td>${m.qty}</td>
                 <td>$${m.price.toFixed(2)}</td>
                 <td>$${(m.qty * m.price).toFixed(2)}</td>
+                <td class="actions">
+                  <button class="btn-danger" onclick="deleteMaterial('${m.id}')">Remove</button>
+                </td>
               </tr>
             `).join('')}
           </tbody>
@@ -455,8 +446,19 @@
       renderOrders();
     }
 
-    // Make cancelOrder available globally for the onclick handlers
+    function deleteMaterial(materialId) {
+      if (!confirm('Remove this material from the list? Existing orders will keep the material name as "(deleted material)".')) return;
+
+      const materials = loadMaterials().filter(m => m.id !== materialId);
+      saveMaterials(materials);
+
+      renderMaterials();
+      renderOrders();
+    }
+
+    // Make functions available globally for the onclick handlers
     window.cancelOrder = cancelOrder;
+    window.deleteMaterial = deleteMaterial;
 
     // ---------- Init ----------
     renderMaterials();
