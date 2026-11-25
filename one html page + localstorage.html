@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Materials & Orders Manager</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --danger: #f87171;
+      --danger-hover: #ef4444;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.75rem;
+      color: var(--accent);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .card h2 {
+      font-size: 1.15rem;
+      margin-bottom: 1rem;
+      color: var(--accent);
+    }
+
+    form {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    input, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid var(--accent);
+      border-color: transparent;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0f172a;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #0f172a;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.8rem;
+    }
+
+    .btn-danger:hover {
+      background: var(--danger-hover);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 0.65rem 0.5rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+      padding: 1rem 0;
+      text-align: center;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 700px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .status {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status.active {
+      background: #166534;
+      color: #bbf7d0;
+    }
+
+    .status.cancelled {
+      background: #7f1d1d;
+      color: #fecaca;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Materials & Orders</h1>
+
+  <div class="container">
+    <!-- Add Material -->
+    <div class="card">
+      <h2>Add Material</h2>
+      <form id="materialForm">
+        <div>
+          <label for="matName">Name</label>
+          <input type="text" id="matName" required placeholder="e.g. Steel Rod">
+        </div>
+        <div>
+          <label for="matQty">Quantity</label>
+          <input type="number" id="matQty" min="1" required placeholder="100">
+        </div>
+        <div>
+          <label for="matPrice">Unit Price ($)</label>
+          <input type="number" id="matPrice" min="0" step="0.01" required placeholder="12.50">
+        </div>
+        <button type="submit" class="btn-primary">Add Material</button>
+      </form>
+    </div>
+
+    <!-- Materials List -->
+    <div class="card">
+      <h2>Materials List</h2>
+      <div id="materialsTable"></div>
+    </div>
+
+    <!-- Create Order -->
+    <div class="card">
+      <h2>Create Order</h2>
+      <form id="orderForm">
+        <div>
+          <label for="orderMat">Material</label>
+          <select id="orderMat" required></select>
+        </div>
+        <div>
+          <label for="orderQty">Quantity</label>
+          <input type="number" id="orderQty" min="1" required>
+        </div>
+        <div>
+          <label for="orderCustomer">Customer Name</label>
+          <input type="text" id="orderCustomer" required placeholder="Customer name">
+        </div>
+        <button type="submit" class="btn-primary">Place Order</button>
+      </form>
+    </div>
+
+    <!-- Orders List -->
+    <div class="card">
+      <h2>Orders</h2>
+      <div id="ordersTable"></div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Storage helpers ----------
+    const MATERIALS_KEY = 'materials_app_materials';
+    const ORDERS_KEY = 'materials_app_orders';
+
+    function loadMaterials() {
+      return JSON.parse(localStorage.getItem(MATERIALS_KEY) || '[]');
+    }
+
+    function saveMaterials(materials) {
+      localStorage.setItem(MATERIALS_KEY, JSON.stringify(materials));
+    }
+
+    function loadOrders() {
+      return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+    }
+
+    function saveOrders(orders) {
+      localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    // ---------- Render functions ----------
+    function renderMaterials() {
+      const materials = loadMaterials();
+      const container = document.getElementById('materialsTable');
+      const select = document.getElementById('orderMat');
+
+      // Update select options
+      select.innerHTML = materials.length
+        ? materials.map(m => `<option value="${m.id}">${m.name} (stock: ${m.qty})</option>`).join('')
+        : '<option value="">No materials available</option>';
+
+      if (materials.length === 0) {
+        container.innerHTML = '<p class="empty">No materials yet. Add one above.</p>';
+        return;
+      }
+
+      container.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Total Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${materials.map(m => `
+              <tr>
+                <td>${escapeHtml(m.name)}</td>
+                <td>${m.qty}</td>
+                <td>$${m.price.toFixed(2)}</td>
+                <td>$${(m.qty * m.price).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderOrders() {
+      const orders = loadOrders();
+      const materials = loadMaterials();
+      const container = document.getElementById('ordersTable');
+
+      if (orders.length === 0) {
+        container.innerHTML = '<p class="empty">No orders yet.</p>';
+        return;
+      }
+
+      container.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Material</th>
+              <th>Qty</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${orders.map(o => {
+              const mat = materials.find(m => m.id === o.materialId);
+              const matName = mat ? mat.name : '(deleted material)';
+              return `
+                <tr>
+                  <td>${o.id.slice(-6)}</td>
+                  <td>${escapeHtml(o.customer)}</td>
+                  <td>${escapeHtml(matName)}</td>
+                  <td>${o.qty}</td>
+                  <td>$${o.total.toFixed(2)}</td>
+                  <td>
+                    <span class="status ${o.status}">
+                      ${o.status}
+                    </span>
+                  </td>
+                  <td class="actions">
+                    ${o.status === 'active'
+                      ? `<button class="btn-danger" onclick="cancelOrder('${o.id}')">Cancel</button>`
+                      : '—'}
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---------- Event handlers ----------
+    document.getElementById('materialForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('matName').value.trim();
+      const qty = parseInt(document.getElementById('matQty').value, 10);
+      const price = parseFloat(document.getElementById('matPrice').value);
+
+      if (!name || qty < 1 || isNaN(price) || price < 0) {
+        alert('Please fill all fields correctly.');
+        return;
+      }
+
+      const materials = loadMaterials();
+      materials.push({
+        id: generateId(),
+        name,
+        qty,
+        price
+      });
+      saveMaterials(materials);
+
+      e.target.reset();
+      renderMaterials();
+      renderOrders();
+    });
+
+    document.getElementById('orderForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const materialId = document.getElementById('orderMat').value;
+      const qty = parseInt(document.getElementById('orderQty').value, 10);
+      const customer = document.getElementById('orderCustomer').value.trim();
+
+      if (!materialId || qty < 1 || !customer) {
+        alert('Please fill all fields correctly.');
+        return;
+      }
+
+      const materials = loadMaterials();
+      const mat = materials.find(m => m.id === materialId);
+
+      if (!mat) {
+        alert('Material not found.');
+        return;
+      }
+
+      if (mat.qty < qty) {
+        alert(`Not enough stock. Available: ${mat.qty}`);
+        return;
+      }
+
+      // Reduce stock
+      mat.qty -= qty;
+      saveMaterials(materials);
+
+      // Create order
+      const orders = loadOrders();
+      orders.unshift({
+        id: generateId(),
+        materialId,
+        qty,
+        customer,
+        total: qty * mat.price,
+        status: 'active',
+        createdAt: new Date().toISOString()
+      });
+      saveOrders(orders);
+
+      e.target.reset();
+      renderMaterials();
+      renderOrders();
+    });
+
+    function cancelOrder(orderId) {
+      if (!confirm('Cancel this order? Stock will be restored.')) return;
+
+      const orders = loadOrders();
+      const order = orders.find(o => o.id === orderId);
+      if (!order || order.status !== 'active') return;
+
+      // Restore stock
+      const materials = loadMaterials();
+      const mat = materials.find(m => m.id === order.materialId);
+      if (mat) {
+        mat.qty += order.qty;
+        saveMaterials(materials);
+      }
+
+      // Mark as cancelled
+      order.status = 'cancelled';
+      saveOrders(orders);
+
+      renderMaterials();
+      renderOrders();
+    }
+
+    // Make cancelOrder available globally for the onclick handlers
+    window.cancelOrder = cancelOrder;
+
+    // ---------- Init ----------
+    renderMaterials();
+    renderOrders();
+  </script>
+</body>
+</html>
